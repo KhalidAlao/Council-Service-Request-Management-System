@@ -124,7 +124,43 @@ def seed_admin_user():
     db.session.add(admin_user)
     print(f"[CREATE] Admin user: '{admin_email}' (password: {admin_password})")
     
+def seed_support_officer():
+    """
+    Create a default support officer user for testing.
+    Credentials can be overridden via environment variables.
+    """
+    officer_email = os.getenv('OFFICER_EMAIL', 'officer@council.gov')
+    officer_password = os.getenv('OFFICER_PASSWORD', 'officer123')
     
+    # Check if officer already exists
+    existing = User.query.filter_by(email=officer_email).first()
+    if existing:
+        print(f"[SKIP] Support officer '{officer_email}' already exists (ID: {existing.user_id})")
+        return
+    
+    # Get the SUPPORT_OFFICER role
+    officer_role = Role.query.filter_by(name='SUPPORT_OFFICER').first()
+    if not officer_role:
+        print("[ERROR] SUPPORT_OFFICER role not found. Run seed_roles() first.")
+        return
+    
+    # Get a department (Roads Maintenance for testing)
+    department = Department.query.filter_by(name='Roads Maintenance').first()
+    if not department:
+        print("[ERROR] Department not found. Run seed_departments() first.")
+        return
+    
+    # Create support officer
+    officer_user = User(
+        full_name='Test Support Officer',
+        email=officer_email,
+        password_hash=generate_password_hash(officer_password, method='pbkdf2:sha256'),
+        role_id=officer_role.role_id,
+        department_id=department.department_id,
+        is_active=True
+    )
+    db.session.add(officer_user)
+    print(f"[CREATE] Support officer: '{officer_email}' (password: {officer_password})")
 
 
 def print_summary():
@@ -187,6 +223,7 @@ def main():
             seed_departments()
             seed_admin_user()  
             seed_resident_user()
+            seed_support_officer() 
             db.session.commit()
             print("\nAll changes committed successfully!")
             print_summary()
