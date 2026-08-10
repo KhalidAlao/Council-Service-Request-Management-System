@@ -21,6 +21,13 @@ from app.utils.reference_generator import generate_reference_number
 from app.constants import CATEGORY_TO_DEPARTMENT
 from app.utils.auth_decorators import role_required
 
+from app.utils.status_helpers import (
+    ROLE_ALLOWED_STATUSES,
+    validate_transition,
+    log_change,
+    get_request_or_404
+)
+
 requests_bp = Blueprint('requests', __name__, url_prefix='/api/v1')
 
 
@@ -222,6 +229,114 @@ def get_request(request_id):
     if user_role == 'RESIDENT':
         if request_obj.submitted_by_user_id != current_user_id:
             return jsonify({'error': 'Request not found'}), 404
+    
+    # Serialize and return
+    response_schema = RequestResponseSchema()
+    result = response_schema.dump(request_obj)
+    return jsonify(result), 200
+
+@requests_bp.route('/requests/<int:request_id>/status', methods=['PATCH'])
+@jwt_required()
+@role_required('SUPPORT_OFFICER', 'ADMIN')
+def change_request_status(request_id):
+    """
+    Change the status of a service request.
+    
+    Permission rules:
+        - Officer: can set UNDER_REVIEW, IN_PROGRESS, DUPLICATE, REJECTED
+        - Admin: can set RESOLVED, CLOSED
+    
+    Validation:
+        - Status transition must follow the state machine
+        - DUPLICATE requires duplicate_of_request_id (must exist, not self)
+        - REJECTED requires rejection_reason (non-empty string)
+    
+    Request Body:
+        {
+            "status": "UNDER_REVIEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED" | "DUPLICATE" | "REJECTED",
+            "duplicate_of_request_id": int,     # Required for DUPLICATE
+            "rejection_reason": string          # Required for REJECTED
+        }
+    """
+    # 1. Fetch the request
+    request_obj, error_response, status_code = get_request_or_404(request_id)
+    if error_response:
+        return error_response, status_code
+    
+    # Get current user
+    current_user_id = int(get_jwt_identity())
+    claims = get_jwt()
+    user_role = claims.get('role')
+    
+    # Parse request body
+    data = request.get_json() or {}
+    target_status = data.get('status')
+    
+    # 2. Validate status is provided
+    if not target_status:
+        return jsonify({'error': 'Status is required'}), 400
+    
+    # 3. Role permission check
+    allowed_statuses = ROLE_ALLOWED_STATUSES.get(user_role, set())
+    if target_status not in allowed_statuses:
+        return jsonify({
+            'error': f"You are not allowed to set status to '{target_status}'"
+        }), 403
+    
+    # 4. State machine validation
+    current_status = request_obj.status
+    is_valid, error_msg = validate_transition(current_status, target_status)
+    if not is_valid:
+        return jsonify({'error': error_msg}), 400
+    
+    # 5. Conditional required fields
+    if target_status == 'DUPLICATE':
+        duplicate_of = data.get('duplicate_of_request_id')
+        
+        if not duplicate_of:
+            return jsonify({
+                'error': 'duplicate_of_request_id is required for DUPLICATE status'
+            }), 400
+        
+        # Validate duplicate_of exists
+        duplicate_request = ServiceRequest.query.get(duplicate_of)
+        if not duplicate_request:
+            return jsonify({'error': 'duplicate_of_request_id must reference a valid request'}), 400
+        
+        # Validate not self-referential
+        if duplicate_of == request_id:
+            return jsonify({'error': 'A request cannot be a duplicate of itself'}), 400
+    
+    if target_status == 'REJECTED':
+        rejection_reason = data.get('rejection_reason')
+        
+        if not rejection_reason or not rejection_reason.strip():
+            return jsonify({
+                'error': 'rejection_reason is required for REJECTED status'
+            }), 400
+    
+    # 6. Perform the status change
+    old_status = request_obj.status
+    request_obj.status = target_status
+    
+    # Handle DUPLICATE specific fields
+    if target_status == 'DUPLICATE':
+        request_obj.duplicate_of_request_id = data['duplicate_of_request_id']
+    else:
+        # Clear duplicate_of if not DUPLICATE (cleanup)
+        request_obj.duplicate_of_request_id = None
+    
+    # 7. Audit log
+    log_change(
+        request_id=request_obj.request_id,
+        changed_by_user_id=current_user_id,
+        field_name='status',
+        old_value=old_status,
+        new_value=target_status
+    )
+    
+    # 8. Commit and return
+    db.session.commit()
     
     # Serialize and return
     response_schema = RequestResponseSchema()
