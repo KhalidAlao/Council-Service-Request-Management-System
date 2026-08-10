@@ -60,6 +60,23 @@ class RequestResponseSchema(Schema):
     date_submitted = fields.DateTime()
     last_updated = fields.DateTime()
     
-    submitted_by = fields.Nested('UserBasicSchema', only=('user_id', 'full_name', 'email'), allow_none=True)
-    assigned_officer = fields.Nested('UserBasicSchema', only=('user_id', 'full_name'), allow_none=True)
-    department = fields.Nested('DepartmentBasicSchema', only=('department_id', 'name'), allow_none=True)
+    
+    submitted_by = fields.Nested(
+        'UserBasicSchema',
+        only=('user_id', 'full_name', 'email'),
+        allow_none=True,
+        attribute='submitter'  
+    )
+    
+    
+    assigned_officer = fields.Nested(
+        'UserBasicSchema',
+        only=('user_id', 'full_name'),
+        allow_none=True
+    )
+    
+    department = fields.Nested(
+        'DepartmentBasicSchema',
+        only=('department_id', 'name'),
+        allow_none=True
+    )
