@@ -11,10 +11,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
 
 from app.extensions import db
-from app.models import ServiceRequest, Department
+from app.models import ServiceRequest, Department, AuditLog
 from app.schemas.request_schemas import (
     RequestSubmitSchema,
-    RequestResponseSchema
+    RequestResponseSchema,
+    RequestTrackSchema, AuditLogEntrySchema
     
 )
 from app.utils.reference_generator import generate_reference_number
@@ -416,3 +417,76 @@ def assign_officer(request_id):
     response_schema = RequestResponseSchema()
     result = response_schema.dump(request_obj)
     return jsonify(result), 200
+
+@requests_bp.route('/requests/track', methods=['GET'])
+def track_request():
+    """
+    Public tracking by reference number (no auth required).
+    
+    Query Parameters:
+        reference: string (e.g., SR-2026-A7X92B)
+    
+    Returns:
+        Limited public view of request status (no PII).
+    """
+    # 1. Get reference number
+    reference = request.args.get('reference')
+    
+    if not reference:
+        return jsonify({'error': 'reference parameter is required'}), 400
+    
+    # 2. Find the request
+    request_obj = ServiceRequest.query.filter_by(reference_number=reference).first()
+    
+    if not request_obj:
+        return jsonify({'error': 'Request not found'}), 404
+    
+    # 3. Return limited public view via schema
+    schema = RequestTrackSchema()
+    result = schema.dump(request_obj)
+    return jsonify(result), 200
+
+
+@requests_bp.route('/requests/<int:request_id>/audit', methods=['GET'])
+@jwt_required()
+@role_required('SUPPORT_OFFICER', 'ADMIN')
+def get_audit_log(request_id):
+    """
+    Get audit log for a request.
+    
+    Permission Rules:
+        - Admin: Always allowed.
+        - Support Officer: Allowed if request is unassigned, OR if assigned to them.
+        - Resident: Blocked.
+    
+    Returns:
+        Chronological list of audit entries (oldest first).
+    """
+    # 1. Fetch the request
+    request_obj = ServiceRequest.query.get(request_id)
+    if not request_obj:
+        return jsonify({'error': 'Request not found'}), 404
+    
+    # 2. Permission check
+    current_user_id = int(get_jwt_identity())
+    claims = get_jwt()
+    user_role = claims.get('role')
+    
+    if user_role == 'SUPPORT_OFFICER':
+        # If the request is unassigned, any officer can view
+        if request_obj.assigned_officer_id is None:
+            pass  # Allow access
+        # If assigned, only the assigned officer can view
+        elif request_obj.assigned_officer_id != current_user_id:
+            return jsonify({'error': 'Request not found'}), 404
+    # Admin is always allowed
+    
+    # 3. Fetch audit logs (oldest first)
+    logs = AuditLog.query.filter_by(request_id=request_id)\
+        .order_by(AuditLog.changed_at.asc()).all()
+    
+    # 4. Serialize with nested user info
+    schema = AuditLogEntrySchema(many=True)
+    result = schema.dump(logs)
+    return jsonify({'data': result}), 200
+

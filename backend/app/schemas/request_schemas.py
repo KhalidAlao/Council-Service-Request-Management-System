@@ -81,3 +81,22 @@ class RequestResponseSchema(Schema):
         only=('department_id', 'name'),
         allow_none=True
     )
+    
+class RequestTrackSchema(Schema):
+    """Schema for public tracking response (no PII)."""
+    reference_number = fields.Str()
+    status = fields.Str()
+    title = fields.Str()
+    location = fields.Str()
+    category = fields.Str()
+    date_submitted = fields.DateTime()
+    last_updated = fields.DateTime()
+
+
+class AuditLogEntrySchema(Schema):
+    """Schema for audit log entries."""
+    field_changed = fields.Str()
+    old_value = fields.Str(allow_none=True)
+    new_value = fields.Str(allow_none=True)
+    changed_at = fields.DateTime()
+    changed_by = fields.Nested('UserBasicSchema', only=('user_id', 'full_name'))
