@@ -59,6 +59,7 @@ class RequestResponseSchema(Schema):
     status = fields.Str()
     date_submitted = fields.DateTime()
     last_updated = fields.DateTime()
+    rejection_reason = fields.Str(allow_none=True)
     
     
     submitted_by = fields.Nested(

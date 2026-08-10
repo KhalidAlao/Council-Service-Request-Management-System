@@ -118,6 +118,7 @@ def create_user():
     user = User(
         full_name=data['full_name'],
         email=data['email'],
+        phone=data.get('phone'),
         password_hash=password_hash,
         role_id=role.role_id,
         department_id=data.get('department_id'),

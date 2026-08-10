@@ -20,6 +20,7 @@ class ServiceRequest(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
     location = db.Column(db.Text, nullable=False)
+    rejection_reason = db.Column(db.Text, nullable=True)
     
     # Enums (SQLAlchemy will create CHECK constraints in SQLite, native ENUM in PostgreSQL)
     category = db.Column(db.String(50), nullable=False)

@@ -309,11 +309,13 @@ def change_request_status(request_id):
     
     if target_status == 'REJECTED':
         rejection_reason = data.get('rejection_reason')
-        
         if not rejection_reason or not rejection_reason.strip():
-            return jsonify({
-                'error': 'rejection_reason is required for REJECTED status'
-            }), 400
+            return jsonify({'error': 'rejection_reason is required for REJECTED status'}), 400
+        
+        request_obj.rejection_reason = rejection_reason.strip()
+    else:
+        # Clear rejection_reason if not REJECTED
+        request_obj.rejection_reason = None
     
     # 6. Perform the status change
     old_status = request_obj.status

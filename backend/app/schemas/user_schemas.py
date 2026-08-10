@@ -28,6 +28,7 @@ class UserCreateSchema(Schema):
     
     full_name = fields.Str(required=True)
     email = fields.Email(required=True)
+    phone = fields.Str(required=False, allow_none=True)
     password = fields.Str(
         required=True,
         validate=Length(min=8, error="Password must be at least 8 characters long")
