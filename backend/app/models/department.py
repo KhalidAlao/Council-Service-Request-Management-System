@@ -17,6 +17,7 @@ class Department(db.Model):
     
    
     users = db.relationship('User', back_populates='department', lazy='dynamic')
+    requests = db.relationship('ServiceRequest', back_populates='department', lazy='dynamic')
     
     def __repr__(self):
         return f'<Department {self.department_id}: {self.name}>'

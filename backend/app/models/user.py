@@ -36,6 +36,19 @@ class User(db.Model):
     role = db.relationship('Role', back_populates='users')
     department = db.relationship('Department', back_populates='users')
     
+    
+     
+    # These are the "one" side of one-to-many relationships
+    submitted_requests = db.relationship('ServiceRequest', foreign_keys='ServiceRequest.submitted_by_user_id', back_populates='submitter', lazy='dynamic')
+    assigned_requests = db.relationship('ServiceRequest', foreign_keys='ServiceRequest.assigned_officer_id', back_populates='assigned_officer', lazy='dynamic')
+    
+    # RequestNote relationship (reciprocal to RequestNote.author)
+    notes = db.relationship('RequestNote', back_populates='author', lazy='dynamic')
+    
+    # AuditLog relationship (reciprocal to AuditLog.changed_by)
+    audit_entries = db.relationship('AuditLog', back_populates='changed_by', lazy='dynamic')
+    
+    
     def __repr__(self):
         # Defensively handles possible None role (even though role_id is required)
         role_name = self.role.name if self.role else "No Role"
