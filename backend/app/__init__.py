@@ -2,7 +2,7 @@
 Application factory — creates and configures the Flask app.
 """
 
-from flask import Flask
+from flask import Flask # type: ignore
 from app.extensions import db, migrate
 from app.config import Config
 

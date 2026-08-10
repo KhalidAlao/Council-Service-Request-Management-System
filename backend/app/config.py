@@ -3,7 +3,7 @@ Configuration — environment-specific settings.
 """
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 load_dotenv()
 

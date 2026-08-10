@@ -17,6 +17,8 @@ class Role(db.Model):
     # Role name — must be unique and cannot be null
     name = db.Column(db.String(50), unique=True, nullable=False)
     
+    users = db.relationship('User', back_populates='role', lazy='dynamic')
+    
     
     
     def __repr__(self):
