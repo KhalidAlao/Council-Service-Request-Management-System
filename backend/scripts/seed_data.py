@@ -62,7 +62,31 @@ def seed_departments():
     print(f"\nDepartments: {created_count} created, {skipped_count} skipped.")
     return created_count, skipped_count
 
-
+def seed_resident_user():
+    """Create a default resident user for testing."""
+    resident_email = os.getenv('RESIDENT_EMAIL', 'resident@example.com')
+    resident_password = os.getenv('RESIDENT_PASSWORD', 'resident123')
+    
+    existing = User.query.filter_by(email=resident_email).first()
+    if existing:
+        print(f"[SKIP] Resident user '{resident_email}' already exists")
+        return
+    
+    resident_role = Role.query.filter_by(name='RESIDENT').first()
+    if not resident_role:
+        print("[ERROR] RESIDENT role not found. Run seed_roles() first.")
+        return
+    
+    resident_user = User(
+        full_name='Test Resident',
+        email=resident_email,
+        password_hash=generate_password_hash(resident_password, method='pbkdf2:sha256'),
+        role_id=resident_role.role_id,
+        is_active=True
+    )
+    db.session.add(resident_user)
+    print(f"[CREATE] Resident user: '{resident_email}'")
+    
 def seed_admin_user():
     """
     Create a default admin user for testing.
@@ -99,6 +123,8 @@ def seed_admin_user():
     )
     db.session.add(admin_user)
     print(f"[CREATE] Admin user: '{admin_email}' (password: {admin_password})")
+    
+    
 
 
 def print_summary():
@@ -160,6 +186,7 @@ def main():
             seed_roles()
             seed_departments()
             seed_admin_user()  
+            seed_resident_user()
             db.session.commit()
             print("\nAll changes committed successfully!")
             print_summary()
