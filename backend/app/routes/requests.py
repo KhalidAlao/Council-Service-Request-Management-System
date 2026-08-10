@@ -342,3 +342,75 @@ def change_request_status(request_id):
     response_schema = RequestResponseSchema()
     result = response_schema.dump(request_obj)
     return jsonify(result), 200
+
+@requests_bp.route('/requests/<int:request_id>/assign', methods=['PATCH'])
+@jwt_required()
+@role_required('SUPPORT_OFFICER', 'ADMIN')
+def assign_officer(request_id):
+    """
+    Assign an officer to a service request.
+    
+    Permission rules:
+        - Admin: Can assign any request to any officer
+        - Officer: Can self-assign if unassigned
+        - Officer: Can hand off if currently assigned to them
+    
+    Request Body:
+        {
+            "assigned_officer_id": int
+        }
+    """
+    from app.utils.status_helpers import validate_target_officer, can_assign_officer, log_change
+    
+    # 1. Fetch the request
+    request_obj = ServiceRequest.query.get(request_id)
+    if not request_obj:
+        return jsonify({'error': 'Request not found'}), 404
+    
+    # Get current user
+    current_user_id = int(get_jwt_identity())
+    claims = get_jwt()
+    current_user_role = claims.get('role')
+    
+    # 2. Parse request body
+    data = request.get_json() or {}
+    target_officer_id = data.get('assigned_officer_id')
+    
+    if not target_officer_id:
+        return jsonify({'error': 'assigned_officer_id is required'}), 400
+    
+    # 3. Validate target officer exists, is active, and has SUPPORT_OFFICER role
+    target_user, error_response, status_code = validate_target_officer(target_officer_id)
+    if error_response:
+        return error_response, status_code
+    
+    # 4. Check if current user can assign
+    can_assign, error_msg = can_assign_officer(
+        current_user_id,
+        current_user_role,
+        request_obj,
+        target_officer_id
+    )
+    if not can_assign:
+        return jsonify({'error': error_msg}), 403
+    
+    # 5. Perform the assignment
+    old_assigned_officer_id = request_obj.assigned_officer_id
+    request_obj.assigned_officer_id = target_officer_id
+    
+    # 6. Audit log
+    log_change(
+        request_id=request_obj.request_id,
+        changed_by_user_id=current_user_id,
+        field_name='assigned_officer_id',
+        old_value=old_assigned_officer_id,
+        new_value=target_officer_id
+    )
+    
+    # 7. Commit and return
+    db.session.commit()
+    
+    # Serialize and return
+    response_schema = RequestResponseSchema()
+    result = response_schema.dump(request_obj)
+    return jsonify(result), 200

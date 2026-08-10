@@ -162,6 +162,37 @@ def seed_support_officer():
     db.session.add(officer_user)
     print(f"[CREATE] Support officer: '{officer_email}' (password: {officer_password})")
 
+def seed_second_officer():
+    """Create a second support officer for testing handoffs."""
+    officer2_email = os.getenv('OFFICER2_EMAIL', 'officer2@council.gov')
+    officer2_password = os.getenv('OFFICER2_PASSWORD', 'officer2123')
+    
+    existing = User.query.filter_by(email=officer2_email).first()
+    if existing:
+        print(f"[SKIP] Second officer '{officer2_email}' already exists")
+        return
+    
+    officer_role = Role.query.filter_by(name='SUPPORT_OFFICER').first()
+    if not officer_role:
+        print("[ERROR] SUPPORT_OFFICER role not found.")
+        return
+    
+    department = Department.query.filter_by(name='Roads Maintenance').first()
+    if not department:
+        print("[ERROR] Department not found.")
+        return
+    
+    officer2_user = User(
+        full_name='Second Support Officer',
+        email=officer2_email,
+        password_hash=generate_password_hash(officer2_password, method='pbkdf2:sha256'),
+        role_id=officer_role.role_id,
+        department_id=department.department_id,
+        is_active=True
+    )
+    db.session.add(officer2_user)
+    print(f"[CREATE] Second officer: '{officer2_email}' (password: {officer2_password})")
+
 
 def print_summary():
     """Print a summary of what's in the database after seeding."""
@@ -224,6 +255,7 @@ def main():
             seed_admin_user()  
             seed_resident_user()
             seed_support_officer() 
+            seed_second_officer()
             db.session.commit()
             print("\nAll changes committed successfully!")
             print_summary()

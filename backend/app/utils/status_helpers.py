@@ -87,3 +87,58 @@ def get_request_or_404(request_id):
     if not request_obj:
         return None, jsonify({'error': 'Request not found'}), 404
     return request_obj, None, None
+
+def validate_target_officer(target_officer_id):
+    """
+    Validate that the target user exists, is active, and has SUPPORT_OFFICER role.
+    
+    Args:
+        target_officer_id: ID of the user to assign
+    
+    Returns:
+        tuple: (user_obj, error_response, status_code)
+            user_obj: The User object if valid, None if not
+            error_response: JSON response if error, None if success
+            status_code: HTTP status code if error, None if success
+    """
+    from app.models import User
+    
+    target_user = User.query.get(target_officer_id)
+    
+    if not target_user:
+        return None, jsonify({'error': 'User not found'}), 404
+    
+    if not target_user.is_active:
+        return None, jsonify({'error': 'User is deactivated'}), 400
+    
+    if not target_user.role or target_user.role.name != 'SUPPORT_OFFICER':
+        return None, jsonify({'error': 'Target user is not a support officer'}), 400
+    
+    return target_user, None, None
+
+
+def can_assign_officer(current_user_id, current_user_role, request_obj, target_user_id):
+    """
+    Check if a user can assign a request to a target officer.
+    """
+    if current_user_role == 'ADMIN':
+        return True, None
+    
+    if current_user_role == 'SUPPORT_OFFICER':
+        # Case 1: Self-assign (only if currently unassigned)
+        if target_user_id == current_user_id:
+            if request_obj.assigned_officer_id is None:
+                return True, None
+            elif request_obj.assigned_officer_id == current_user_id:
+                # ✅ Clearer message for already assigned to self
+                return False, "You are already assigned to this request"
+            else:
+                return False, "This request is already assigned to someone else"
+        
+        # Case 2: Handoff (only if currently assigned to this officer)
+        if request_obj.assigned_officer_id == current_user_id:
+            return True, None
+        
+        return False, "You can only self-assign unassigned requests or hand off requests assigned to you"
+    
+    return False, "You do not have permission to assign officers"
