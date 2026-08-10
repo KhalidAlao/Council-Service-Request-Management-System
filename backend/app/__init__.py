@@ -17,5 +17,9 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)  # This connects Flask-Migrate to your app and db
 
     from app import models # registers all models with db.metadata
+    
+    # Register blueprints
+    from app.routes.requests import requests_bp
+    app.register_blueprint(requests_bp)
 
     return app

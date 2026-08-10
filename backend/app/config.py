@@ -3,7 +3,7 @@ Configuration — environment-specific settings.
 """
 
 import os
-from dotenv import load_dotenv # type: ignore
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -13,4 +13,24 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///dev.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-jwt-secret')
+    
+    # ===== JWT Configuration =====
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-jwt-secret-key')
+    
+    # Where to look for the JWT token
+    JWT_TOKEN_LOCATION = ['headers']
+    
+    # Header configuration
+    JWT_HEADER_NAME = 'Authorization'
+    JWT_HEADER_TYPE = 'Bearer'
+    
+    # Token expiration times
+    JWT_ACCESS_TOKEN_EXPIRES = 900          # 15 minutes (in seconds)
+    JWT_REFRESH_TOKEN_EXPIRES = 604800      # 7 days (in seconds)
+    
+    # Required: The claim to use for identity
+    JWT_IDENTITY_CLAIM = 'sub'              # Standard claim for user identity
+    
+    # Additional security settings
+    JWT_ALGORITHM = 'HS256'
+    JWT_DECODE_ALGORITHMS = ['HS256']
