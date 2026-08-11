@@ -301,3 +301,14 @@ def deactivate_user(user_id):
         'message': f"User '{user.email}' has been deactivated",
         'user': result
     }), 200
+    
+@admin_bp.route('/departments', methods=['GET'])
+@jwt_required()
+@role_required('ADMIN')
+def list_departments():
+    """List all departments for admin UI dropdown."""
+    departments = Department.query.order_by(Department.name).all()
+    return jsonify([{
+        'department_id': d.department_id,
+        'name': d.name
+    } for d in departments]), 200

@@ -2,19 +2,13 @@
  * App entry point — initializes the router and starts the application.
  */
 import { initRouter, navigate } from './utils/router.js';
-import { getToken, getUserRole, setUnauthorizedHandler } from './api/client.js';
+import { getToken, getUserRole, setUnauthorizedHandler, logout } from './api/client.js';
 import { renderLogin } from './pages/login.js';
 import { renderSubmit } from './pages/submit.js';
 import { renderTrack } from './pages/track.js';
 import { renderDashboard } from './pages/dashboard.js';
 import { renderDetail } from './pages/detail.js';
-
-// ---- Placeholder pages ----
-const renderAdmin = () => {
-    document.getElementById('app').innerHTML = `<h1>Admin users (placeholder)</h1>`;
-};
-
-
+import { renderAdmin } from './pages/admin.js';
 
 // ---- Wire up 401 handling ----
 setUnauthorizedHandler(() => navigate('/login'));
@@ -64,8 +58,7 @@ function renderHeader() {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user_role');
+            logout();                       
             navigate('/login');
             renderHeader();
         });
@@ -73,7 +66,6 @@ function renderHeader() {
 }
 
 // ---- Route registry ----
-// Only keep the parameterized route, remove the duplicate '/detail'
 const routes = {
     '/': renderSubmit,
     '/login': renderLogin,
@@ -90,7 +82,6 @@ const protectedRoutes = ['/dashboard', '/detail/:id', '/admin'];
 const routeGuard = (path) => {
     const isProtected = protectedRoutes.some(pattern => {
         if (pattern === path) return true;
-        // For parameterized routes, check prefix
         if (pattern === '/detail/:id' && path.startsWith('/detail/')) return true;
         return false;
     });
@@ -104,16 +95,13 @@ const routeGuard = (path) => {
 
 // ---- Custom initializer ----
 function initializeApp() {
-    // Wrap each route to render header before the page
     const wrappedRoutes = {};
     for (const [path, renderFn] of Object.entries(routes)) {
-        // Accept 'params' and pass it to renderFn
         wrappedRoutes[path] = (params) => {
             renderHeader();
             renderFn(params);
         };
     }
-
     initRouter(wrappedRoutes, routeGuard);
 }
 
