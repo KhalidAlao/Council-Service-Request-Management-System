@@ -21,7 +21,7 @@ function renderHeader() {
 
     let navHtml = `
         <nav class="main-nav">
-            <div class="nav-brand">Council Service Request Managment System</div>
+            <div class="nav-brand">Council Service Request Management System</div>
             <ul class="nav-links">
                 <li><a href="#/submit">Submit</a></li>
                 <li><a href="#/track">Track</a></li>
