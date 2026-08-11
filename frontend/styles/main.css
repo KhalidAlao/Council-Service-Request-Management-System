@@ -1,11 +1,85 @@
+:root {
+    --primary: #1a56db;
+    --primary-dark: #1e40af;
+    --danger: #dc2626;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
 
 body {
     font-family: system-ui, -apple-system, sans-serif;
     background: #f9fafb;
     margin: 0;
-    padding: 2rem;
+    padding: 0;
 }
 
+/* ---- Navigation ---- */
+.main-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0.75rem 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.nav-brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--gray-700);
+    font-weight: 500;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius);
+    transition: background 0.15s ease;
+}
+
+.nav-links a:hover {
+    background: var(--gray-100);
+    color: var(--primary-dark);
+}
+
+.nav-logout {
+    background: none;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    color: var(--gray-700);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.nav-logout:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-500);
+}
+
+/* ---- Page containers ---- */
 .login-container {
     max-width: 400px;
     margin: 4rem auto;
@@ -27,6 +101,22 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.submit-container,
+.track-container,
+.dashboard-container,
+.admin-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.detail-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* ---- Forms ---- */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -37,7 +127,9 @@ body {
     margin-bottom: 0.25rem;
 }
 
-.form-group input {
+.form-group input,
+.form-group select,
+.form-group textarea {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #d1d5db;
@@ -46,6 +138,7 @@ body {
     box-sizing: border-box;
 }
 
+/* ---- Buttons ---- */
 button[type="submit"] {
     width: 100%;
     padding: 0.6rem;
@@ -61,6 +154,30 @@ button[type="submit"]:hover {
     background: #1e40af;
 }
 
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+/* ---- Messages ---- */
 .error-message {
     color: #dc2626;
     background: #fee2e2;
@@ -69,13 +186,23 @@ button[type="submit"]:hover {
     margin-bottom: 1rem;
 }
 
-/* Detail page */
-.detail-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 1rem;
+.success-message {
+    color: #166534;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
 }
 
+.status-message {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background: #f3f4f6;
+}
+
+/* ---- Detail page ---- */
 .detail-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -113,6 +240,7 @@ button[type="submit"]:hover {
     margin-top: 0;
 }
 
+/* ---- Status badges (service requests) ---- */
 .status-badge {
     display: inline-block;
     padding: 0.2rem 0.6rem;
@@ -128,6 +256,11 @@ button[type="submit"]:hover {
 .status-DUPLICATE { background: #fde68a; color: #78350f; }
 .status-REJECTED { background: #fecaca; color: #991b1b; }
 
+/* ---- Status badges (user active/inactive, admin page) ---- */
+.status-active { background: #d1fae5; color: #065f46; }
+.status-inactive { background: #fecaca; color: #991b1b; }
+
+/* ---- Notes ---- */
 .note-item {
     background: white;
     padding: 0.75rem;
@@ -156,6 +289,7 @@ button[type="submit"]:hover {
     font-family: inherit;
 }
 
+/* ---- Audit log ---- */
 .audit-entry {
     padding: 0.4rem 0;
     border-bottom: 1px solid #e5e7eb;
@@ -166,9 +300,33 @@ button[type="submit"]:hover {
 .audit-new { color: #1a56db; font-weight: 500; }
 .audit-meta { font-size: 0.8rem; color: #6b7280; margin-left: 0.5rem; }
 
-.status-message {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 4px;
-    background: #f3f4f6;
+/* ---- Tables (dashboard, admin) ---- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+th, td {
+    text-align: left;
+    padding: 0.6rem 0.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+th {
+    background: var(--gray-50);
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+/* ---- Cards (admin sections) ---- */
+.admin-section {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
 }
