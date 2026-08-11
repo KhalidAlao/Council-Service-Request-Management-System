@@ -1,0 +1,14 @@
+[0;34mCouncil Service Management System - Smoke Test[0m
+Base URL: http://127.0.0.1:5000
+
+[0;34m➤[0m Checking server availability...
+[0;32m✓[0m Server is reachable at http://127.0.0.1:5000
+
+[0;34m=== Smoke Test: Full Workflow ===[0m
+
+[0;34m➤[0m Admin login...
+[0;34m➤[0m Logging in as admin@council.gov...
+[0;32m✓[0m Login successful (token: ...)
+
+[0;34m➤[0m Creating resident user: resident.smoke.1786438545@test.com
+[0;31m✗[0m User creation failed (status 422): 
