@@ -34,3 +34,11 @@ class Config:
     # Additional security settings
     JWT_ALGORITHM = 'HS256'
     JWT_DECODE_ALGORITHMS = ['HS256']
+    
+class TestConfig(Config):
+    """Test configuration — in-memory database, no persistence."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Use a fixed secret for deterministic tokens in tests
+    JWT_SECRET_KEY = 'test-jwt-secret-key-that-is-at-least-32-bytes-long'

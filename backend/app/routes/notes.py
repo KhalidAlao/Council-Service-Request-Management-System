@@ -28,7 +28,7 @@ def add_note(request_id):
         - Resident: Blocked by @role_required.
     """
     # 1. Fetch the request
-    request_obj = ServiceRequest.query.get(request_id)
+    request_obj = db.session.get(ServiceRequest, request_id)
     if not request_obj:
         return jsonify({'error': 'Request not found'}), 404
     
@@ -84,7 +84,7 @@ def get_notes(request_id):
           with other resident-facing security decisions).
     """
     # 1. Fetch the request
-    request_obj = ServiceRequest.query.get(request_id)
+    request_obj = db.session.get(ServiceRequest, request_id)
     if not request_obj:
         return jsonify({'error': 'Request not found'}), 404
     

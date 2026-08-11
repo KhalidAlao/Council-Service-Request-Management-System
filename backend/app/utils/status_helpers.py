@@ -5,28 +5,8 @@ Status transition helpers for service requests.
 from flask import jsonify
 from app.models import ServiceRequest, AuditLog
 from app.extensions import db
+from app.constants import STATUS_TRANSITIONS
 
-
-# Role → Allowed statuses mapping
-ROLE_ALLOWED_STATUSES = {
-    'SUPPORT_OFFICER': {
-        'UNDER_REVIEW', 'IN_PROGRESS', 'DUPLICATE', 'REJECTED'
-    },
-    'ADMIN': {
-        'RESOLVED', 'CLOSED'
-    }
-}
-
-# State transition map: current_status → allowed next statuses
-STATUS_TRANSITIONS = {
-    'SUBMITTED': {'UNDER_REVIEW', 'DUPLICATE', 'REJECTED'},
-    'UNDER_REVIEW': {'IN_PROGRESS', 'DUPLICATE', 'REJECTED'},
-    'IN_PROGRESS': {'RESOLVED'},
-    'RESOLVED': {'CLOSED'},
-    'DUPLICATE': set(),      # Terminal — no further transitions
-    'REJECTED': set(),        # Terminal — no further transitions
-    'CLOSED': set()           # Terminal — no further transitions
-}
 
 
 def validate_transition(current_status, target_status):
@@ -83,7 +63,7 @@ def get_request_or_404(request_id):
             request_obj: The request object if found, None if not
             response: JSON response if error, None if success
     """
-    request_obj = ServiceRequest.query.get(request_id)
+    request_obj = db.session.get(ServiceRequest, request_id)
     if not request_obj:
         return None, jsonify({'error': 'Request not found'}), 404
     return request_obj, None, None
@@ -103,7 +83,7 @@ def validate_target_officer(target_officer_id):
     """
     from app.models import User
     
-    target_user = User.query.get(target_officer_id)
+    target_user = db.session.get(User, target_officer_id)
     
     if not target_user:
         return None, jsonify({'error': 'User not found'}), 404
@@ -130,7 +110,7 @@ def can_assign_officer(current_user_id, current_user_role, request_obj, target_u
             if request_obj.assigned_officer_id is None:
                 return True, None
             elif request_obj.assigned_officer_id == current_user_id:
-                # ✅ Clearer message for already assigned to self
+                # Clearer message for already assigned to self
                 return False, "You are already assigned to this request"
             else:
                 return False, "This request is already assigned to someone else"

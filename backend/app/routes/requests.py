@@ -19,11 +19,10 @@ from app.schemas.request_schemas import (
     
 )
 from app.utils.reference_generator import generate_reference_number
-from app.constants import CATEGORY_TO_DEPARTMENT
+from app.constants import CATEGORY_TO_DEPARTMENT, ROLE_ALLOWED_STATUSES
 from app.utils.auth_decorators import role_required
 
 from app.utils.status_helpers import (
-    ROLE_ALLOWED_STATUSES,
     validate_transition,
     log_change,
     get_request_or_404
@@ -219,7 +218,7 @@ def get_request(request_id):
     user_role = claims.get('role')
     
     # Fetch the request
-    request_obj = ServiceRequest.query.get(request_id)
+    request_obj = db.session.get(ServiceRequest, request_id)
     
     # Return 404 if request doesn't exist
     if not request_obj:
@@ -300,7 +299,7 @@ def change_request_status(request_id):
             }), 400
         
         # Validate duplicate_of exists
-        duplicate_request = ServiceRequest.query.get(duplicate_of)
+        duplicate_request = db.session.get(ServiceRequest, request_id)
         if not duplicate_request:
             return jsonify({'error': 'duplicate_of_request_id must reference a valid request'}), 400
         
@@ -366,7 +365,7 @@ def assign_officer(request_id):
     from app.utils.status_helpers import validate_target_officer, can_assign_officer, log_change
     
     # 1. Fetch the request
-    request_obj = ServiceRequest.query.get(request_id)
+    request_obj = db.session.get(ServiceRequest, request_id)
     if not request_obj:
         return jsonify({'error': 'Request not found'}), 404
     
@@ -463,7 +462,7 @@ def get_audit_log(request_id):
         Chronological list of audit entries (oldest first).
     """
     # 1. Fetch the request
-    request_obj = ServiceRequest.query.get(request_id)
+    request_obj = db.session.get(ServiceRequest, request_id)
     if not request_obj:
         return jsonify({'error': 'Request not found'}), 404
     

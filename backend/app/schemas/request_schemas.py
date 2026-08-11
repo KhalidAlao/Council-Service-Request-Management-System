@@ -59,6 +59,7 @@ class RequestResponseSchema(Schema):
     status = fields.Str()
     date_submitted = fields.DateTime()
     last_updated = fields.DateTime()
+    duplicate_of_request_id = fields.Int(allow_none=True) 
     rejection_reason = fields.Str(allow_none=True)
     
     

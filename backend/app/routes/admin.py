@@ -140,7 +140,7 @@ def get_user(user_id):
     """
     Get a single user by ID.
     """
-    user = User.query.get(user_id)
+    user = user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
@@ -168,7 +168,7 @@ def update_user_role(user_id):
         return jsonify({'error': 'You cannot change your own role'}), 400
     
     # Fetch the user
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
@@ -193,7 +193,7 @@ def update_user_role(user_id):
         if not dept_id:
             return jsonify({'error': 'department_id is required for SUPPORT_OFFICER role'}), 400
         
-        department = Department.query.get(dept_id)
+        department = db.session.get(Department, dept_id)
         if not department:
             return jsonify({'error': 'Department not found'}), 400
         
@@ -230,7 +230,7 @@ def update_user_department(user_id):
         }
     """
     # Fetch the user
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
@@ -246,7 +246,7 @@ def update_user_department(user_id):
         return jsonify({'error': e.messages}), 400
     
     # Validate department exists
-    department = Department.query.get(data['department_id'])
+    department = db.session.get(Department, data['department_id'])
     if not department:
         return jsonify({'error': 'Department not found'}), 404
     
@@ -282,7 +282,7 @@ def deactivate_user(user_id):
         return jsonify({'error': 'You cannot deactivate your own account'}), 400
     
     # Fetch the user
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
