@@ -11,7 +11,13 @@ load_dotenv()
 class Config:
     """Base configuration."""
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///dev.db')
+    
+    # ===== Database Configuration =====
+    # Defensive fix: Render may provide postgres://, but SQLAlchemy requires postgresql://
+    db_url = os.getenv('DATABASE_URL', 'sqlite:///dev.db')
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # ===== JWT Configuration =====
@@ -35,6 +41,7 @@ class Config:
     JWT_ALGORITHM = 'HS256'
     JWT_DECODE_ALGORITHMS = ['HS256']
     
+
 class TestConfig(Config):
     """Test configuration — in-memory database, no persistence."""
     TESTING = True
