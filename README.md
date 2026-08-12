@@ -4,6 +4,9 @@ A full-stack web application for managing council service requests — residents
 
 Built as a portfolio project demonstrating REST API design, relational database design, role-based access control, automated testing, and full-stack development.
 
+**Live demo:** https://council-service-api.onrender.com
+*(hosted on Render's free tier — the server sleeps after inactivity, so the first request may take 30–60 seconds to wake up)*
+
 **Repository:** https://github.com/KhalidAlao/Council-Service-Request-Management-System
 
 ## Features
